@@ -4,6 +4,9 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtWebEngineWidgets import * 
 from PyQt6.QtGui import *
+with open("domains.txt") as f:
+    domains = f.readlines()
+    domains = [x.strip() for x in domains]
 
 class PicButton(QAbstractButton):
     def __init__(self, pixmap, parent=None):
