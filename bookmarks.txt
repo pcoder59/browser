@@ -1,2 +1,3 @@
 {"title": "DuckDuckGo — Privacy, simplified.", "url": "https://duckduckgo.com/"}
 {"title": "YouTube", "url": "https://www.youtube.com/"}
+{"title": "Speedtest by Ookla - The Global Broadband Speed Test", "url": "https://www.speedtest.net/"}

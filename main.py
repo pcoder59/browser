@@ -157,7 +157,28 @@ class MainWindow(QMainWindow):
                     self.bookmarks = f.readlines()
                     self.bookmarks = [json.loads(x) for x in self.bookmarks]
                     f.close()
-                    print(self.bookmarks)
+                for i in reversed(range(self.layout.count())):
+                    self.layout.itemAt(i).widget().setParent(None)
+                for bookmark in self.bookmarks:
+                    self.createButton(bookmark)
+        else:
+            try:
+                with open("bookmarks.txt", "w") as f:
+                    i = 0
+                    for x in self.bookmarks:
+                        if(x["url"] != qurl.toString()):
+                            if(i < 1):
+                                f.write("{\"title\": \"" + x["title"] + "\", \"url\": \"" + x["url"] + "\"}")
+                            else:
+                                f.write("\n{\"title\": \"" + x["title"] + "\", \"url\": \"" + x["url"] + "\"}")
+                    f.close()
+            except:
+                print("Error File System")
+            finally:
+                with open("bookmarks.txt") as f:
+                    self.bookmarks = f.readlines()
+                    self.bookmarks = [json.loads(x) for x in self.bookmarks]
+                    f.close()
                 for i in reversed(range(self.layout.count())):
                     self.layout.itemAt(i).widget().setParent(None)
                 for bookmark in self.bookmarks:
