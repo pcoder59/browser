@@ -1,9 +1,9 @@
 import sys
 import json
-from PyQt6.QtCore import *
-from PyQt6.QtWidgets import *
-from PyQt6.QtWebEngineWidgets import * 
-from PyQt6.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtWebEngineWidgets import * 
+from PyQt5.QtGui import *
 with open("domains.txt") as f:
     domains = f.readlines()
     domains = [x.strip() for x in domains]
@@ -118,6 +118,15 @@ class MainWindow(QMainWindow):
 
         self.addTab()
 
+        global_settings = QWebEngineSettings.globalSettings()
+
+        for attr in (
+            QWebEngineSettings.PluginsEnabled,
+            QWebEngineSettings.FullScreenSupportEnabled,
+        ):
+            global_settings.setAttribute(attr, True)
+        self.tabs.currentWidget().page().fullScreenRequested.connect(self.FullscreenRequest)
+
     def createButton(self, bookmark):
         bookmarkButton = QPushButton(self.bookmarkWidget)
         bookmarkButton.setText(bookmark["title"])
@@ -204,13 +213,13 @@ class MainWindow(QMainWindow):
             url = self.urlBar.text()
             for domain in domains:
                 test = ("."+domain).lower()
-                if(url.endswith(test) or url.endswith(test+'/')):
-                    if(url.startswith("http://") or url.startswith("https://")):
+                if(url.startswith("http://") or url.startswith("https://")):
                         self.tabs.currentWidget().setUrl(QUrl(url))
                         self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
-                    else:
-                        self.tabs.currentWidget().setUrl(QUrl("http://"+url))
-                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                        flag = True
+                if(url.endswith(test) or url.endswith(test+'/')):
+                    self.tabs.currentWidget().setUrl(QUrl("http://"+url))
+                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
                     flag = True
             if flag == False:
                 self.tabs.currentWidget().setUrl(QUrl("https://duckduckgo.com/?q="+url))
@@ -239,6 +248,13 @@ class MainWindow(QMainWindow):
         self.urlBar.setText(q.toString())
 
         self.urlBar.setCursorPosition(0)
+
+    def FullscreenRequest(self, request):
+        request.accept()
+        if request.toggleOn():
+            self.tabs.currentWidget().showFullScreen()
+        else:
+            self.tabs.currentWidget().showNormal()
 
 app = QApplication(sys.argv)
 QApplication.setApplicationName("Browser")

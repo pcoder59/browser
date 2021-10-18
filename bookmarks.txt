@@ -1,1 +1,2 @@
 {"title": "DuckDuckGo — Privacy, simplified.", "url": "https://duckduckgo.com/"}
+{"title": "YouTube", "url": "https://www.youtube.com/"}
