@@ -39,36 +39,55 @@ class MainWindow(QMainWindow):
         self.addToolBar(navbar)
 
         plusButton = PicButton(QPixmap("plus.png"))
+        plusButton.setStatusTip("New Tab")
         plusButton.clicked.connect(self.tabOpen)
         navbar.addWidget(plusButton)
 
         navbar.addSeparator()
 
         backButton = PicButton(QPixmap("backArrow.png"))
+        backButton.setStatusTip("Back")
         backButton.clicked.connect(lambda: self.tabs.currentWidget().back())
         navbar.addWidget(backButton)
 
         navbar.addSeparator()
 
         forwardButton = PicButton(QPixmap("forwardArrow.png"))
+        forwardButton.setStatusTip("Forward")
         forwardButton.clicked.connect(lambda: self.tabs.currentWidget().forward())
         navbar.addWidget(forwardButton)
 
         navbar.addSeparator()
 
         reloadButton = PicButton(QPixmap("refreashArrow.png"))
+        reloadButton.setStatusTip("Reload")
         reloadButton.clicked.connect(lambda: self.tabs.currentWidget().reload())
         navbar.addWidget(reloadButton)
 
         navbar.addSeparator()
 
+        stopButton = PicButton(QPixmap("stop.png"))
+        stopButton.setStatusTip("Stop")
+        stopButton.clicked.connect(lambda: self.tabs.currentWidget().stop())
+        navbar.addWidget(stopButton)
+
+        navbar.addSeparator()
+
         self.urlBar = QLineEdit()
+        self.urlBar.setStatusTip("Address")
         self.urlBar.returnPressed.connect(self.navigate)
         navbar.addWidget(self.urlBar)
 
         navbar.addSeparator()
 
-        #self.browser.urlChanged.connect(self.update)
+        goButton = PicButton(QPixmap("forwardArrow.png"))
+        goButton.setStatusTip("Go")
+        goButton.clicked.connect(self.navigate)
+        navbar.addWidget(goButton)
+
+        self.status = QStatusBar()
+
+        self.setStatusBar(self.status)
 
         self.addTab()
 
@@ -92,6 +111,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("% s - Browser" % title)
 
     def addTab(self, qurl = None, label="Blank"):
+        self.status.showMessage("Loading...")
         if qurl is None:
             qurl = QUrl("https://www.duckduckgo.com")
         
@@ -106,22 +126,31 @@ class MainWindow(QMainWindow):
 
         browser.loadFinished.connect(lambda _, i = i, browser = browser: self.tabs.setTabText(i, browser.page().title()))
 
+        browser.loadFinished.connect(lambda: self.status.showMessage("Done"))
+
+        browser.loadFinished.connect(lambda: self.updateTitle(self.tabs.currentWidget()))
+
     def tabOpen(self, i):
-        print("yes")
-        print(i)
         if(i == False):
             self.addTab()
 
     def navigate(self):
+        self.status.showMessage("Loading...")
         flag = False
         url = self.urlBar.text()
         for domain in domains:
             test = ("."+domain).lower()
-            if(url.endswith(test)):
-                self.tabs.currentWidget().setUrl(QUrl("http://"+url))
+            if(url.endswith(test) or url.endswith(test+'/')):
+                if(url.startswith("http://") or url.startswith("https://")):
+                    self.tabs.currentWidget().setUrl(QUrl(url))
+                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                else:
+                    self.tabs.currentWidget().setUrl(QUrl("http://"+url))
+                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
                 flag = True
         if flag == False:
             self.tabs.currentWidget().setUrl(QUrl("https://duckduckgo.com/?q="+url))
+            self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
 
     def update(self, q, browser = None):
         if browser != self.tabs.currentWidget():
