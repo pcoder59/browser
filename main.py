@@ -1,11 +1,9 @@
 import sys
+import json
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtWebEngineWidgets import * 
 from PyQt6.QtGui import *
-with open("domains.txt") as f:
-    domains = f.readlines()
-    domains = [x.strip() for x in domains]
 
 class PicButton(QAbstractButton):
     def __init__(self, pixmap, parent=None):
@@ -22,6 +20,18 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.showMaximized()
+
+        with open("bookmarks.txt") as f:
+            self.bookmarks = f.readlines()
+            self.bookmarks = [json.loads(x) for x in self.bookmarks]
+            f.close()
+
+        self.bookmarkWidget = QWidget()
+        self.bookmarkWidget.setWindowTitle("Bookmarks")
+        self.layout = QHBoxLayout(self.bookmarkWidget)
+
+        for bookmark in self.bookmarks:
+            self.createButton(bookmark)
 
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
@@ -85,11 +95,61 @@ class MainWindow(QMainWindow):
         goButton.clicked.connect(self.navigate)
         navbar.addWidget(goButton)
 
+        navbar.addSeparator()
+
+        bookButton = PicButton(QPixmap("bookmark.png"))
+        bookButton.setStatusTip("Open Bookmarks")
+        bookButton.clicked.connect(lambda: self.bookmarkWidget.show())
+        navbar.addWidget(bookButton)
+
+        navbar.addSeparator()
+
+        starButton = PicButton(QPixmap("star.png"))
+        starButton.setStatusTip("Bookmark This Page")
+        starButton.clicked.connect(self.addBookmark)
+        navbar.addWidget(starButton)
+
         self.status = QStatusBar()
 
         self.setStatusBar(self.status)
 
         self.addTab()
+
+    def createButton(self, bookmark):
+        bookmarkButton = QPushButton(self.bookmarkWidget)
+        bookmarkButton.setText(bookmark["title"])
+        bookmarkButton.clicked.connect(lambda: self.navigate(bookmark["url"]))
+        self.layout.addWidget(bookmarkButton)
+
+    def addBookmark(self):
+        title = self.tabs.currentWidget().page().title()
+        qurl = self.tabs.currentWidget().url()
+        flag = False
+        for x in self.bookmarks:
+            if(x["url"] == qurl.toString()):
+                flag = True
+        if(flag != True):
+            try:
+                if(self.bookmarks):
+                    bookmarkFile = open("bookmarks.txt", "a")
+                    bookmarkFile.write("\n{\"title\": \"" + title + "\", \"url\": \"" + qurl.toString() + "\"}")
+                    bookmarkFile.close()
+                else:
+                    bookmarkFile = open("bookmarks.txt", "a")
+                    bookmarkFile.write("{\"title\": \"" + title + "\", \"url\": \"" + qurl.toString() + "\"}")
+                    bookmarkFile.close()
+            except:
+                print("Error File System")
+            finally:
+                with open("bookmarks.txt") as f:
+                    self.bookmarks = f.readlines()
+                    self.bookmarks = [json.loads(x) for x in self.bookmarks]
+                    f.close()
+                    print(self.bookmarks)
+                for i in reversed(range(self.layout.count())):
+                    self.layout.itemAt(i).widget().setParent(None)
+                for bookmark in self.bookmarks:
+                    self.createButton(bookmark)
 
     def closeTab(self, i):
         self.tabs.removeTab(i)
@@ -134,23 +194,40 @@ class MainWindow(QMainWindow):
         if(i == False):
             self.addTab()
 
-    def navigate(self):
-        self.status.showMessage("Loading...")
-        flag = False
-        url = self.urlBar.text()
-        for domain in domains:
-            test = ("."+domain).lower()
-            if(url.endswith(test) or url.endswith(test+'/')):
-                if(url.startswith("http://") or url.startswith("https://")):
-                    self.tabs.currentWidget().setUrl(QUrl(url))
-                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
-                else:
-                    self.tabs.currentWidget().setUrl(QUrl("http://"+url))
-                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
-                flag = True
-        if flag == False:
-            self.tabs.currentWidget().setUrl(QUrl("https://duckduckgo.com/?q="+url))
-            self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+    def navigate(self, url = None):
+        if(url == None):
+            self.status.showMessage("Loading...")
+            flag = False
+            url = self.urlBar.text()
+            for domain in domains:
+                test = ("."+domain).lower()
+                if(url.endswith(test) or url.endswith(test+'/')):
+                    if(url.startswith("http://") or url.startswith("https://")):
+                        self.tabs.currentWidget().setUrl(QUrl(url))
+                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                    else:
+                        self.tabs.currentWidget().setUrl(QUrl("http://"+url))
+                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                    flag = True
+            if flag == False:
+                self.tabs.currentWidget().setUrl(QUrl("https://duckduckgo.com/?q="+url))
+                self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+        else:
+            self.status.showMessage("Loading...")
+            flag = False
+            for domain in domains:
+                test = ("."+domain).lower()
+                if(url.endswith(test) or url.endswith(test+'/')):
+                    if(url.startswith("http://") or url.startswith("https://")):
+                        self.tabs.currentWidget().setUrl(QUrl(url))
+                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                    else:
+                        self.tabs.currentWidget().setUrl(QUrl("http://"+url))
+                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                    flag = True
+            if flag == False:
+                self.tabs.currentWidget().setUrl(QUrl("https://duckduckgo.com/?q="+url))
+                self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
 
     def update(self, q, browser = None):
         if browser != self.tabs.currentWidget():
