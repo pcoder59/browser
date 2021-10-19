@@ -45,6 +45,10 @@ class MainWindow(QMainWindow):
 
         self.tabs.tabCloseRequested.connect(self.closeTab)
 
+        self.closeTabShort = QShortcut(QKeySequence("Ctrl+W"), self)
+        
+        self.closeTabShort.activated.connect(self.closeCalled)
+
         self.setCentralWidget(self.tabs)
 
         #navbar
@@ -55,6 +59,9 @@ class MainWindow(QMainWindow):
         plusButton.setStatusTip("New Tab")
         plusButton.clicked.connect(self.tabOpen)
         navbar.addWidget(plusButton)
+
+        self.newTabShort = QShortcut(QKeySequence("Ctrl+T"), self)
+        self.newTabShort.activated.connect(self.tabOpen)
 
         navbar.addSeparator()
 
@@ -126,6 +133,10 @@ class MainWindow(QMainWindow):
         ):
             global_settings.setAttribute(attr, True)
         self.tabs.currentWidget().page().fullScreenRequested.connect(self.FullscreenRequest)
+
+    def closeCalled(self):
+        currentTab = self.tabs.currentIndex()
+        self.closeTab(currentTab)
 
     def createButton(self, bookmark):
         bookmarkButton = QPushButton(self.bookmarkWidget)
@@ -224,7 +235,7 @@ class MainWindow(QMainWindow):
 
         browser.loadFinished.connect(lambda: self.updateTitle(self.tabs.currentWidget()))
 
-    def tabOpen(self, i):
+    def tabOpen(self, i = False):
         if(i == False):
             self.addTab()
 
