@@ -169,6 +169,7 @@ class MainWindow(QMainWindow):
                         if(x["url"] != qurl.toString()):
                             if(i < 1):
                                 f.write("{\"title\": \"" + x["title"] + "\", \"url\": \"" + x["url"] + "\"}")
+                                i = i + 1
                             else:
                                 f.write("\n{\"title\": \"" + x["title"] + "\", \"url\": \"" + x["url"] + "\"}")
                     f.close()
