@@ -176,8 +176,14 @@ class MainWindow(QMainWindow):
                     f.close()
                 for i in reversed(range(self.layout.count())):
                     self.layout.itemAt(i).widget().setParent(None)
+                i = 0
+                j = 0
                 for bookmark in self.bookmarks:
-                    self.createButton(bookmark)
+                    if(j%5 == 0 and j != 0):
+                        i = i + 1
+                        j = 0
+                    self.createButton(bookmark, i, j)
+                    j = j + 1
         else:
             try:
                 with open("bookmarks.txt", "w") as f:
@@ -199,8 +205,14 @@ class MainWindow(QMainWindow):
                     f.close()
                 for i in reversed(range(self.layout.count())):
                     self.layout.itemAt(i).widget().setParent(None)
+                i = 0
+                j = 0
                 for bookmark in self.bookmarks:
-                    self.createButton(bookmark)
+                    if(j%5 == 0 and j != 0):
+                        i = i + 1
+                        j = 0
+                    self.createButton(bookmark, i, j)
+                    j = j + 1
 
     def closeTab(self, i):
         self.tabs.removeTab(i)
