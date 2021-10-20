@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
                 i = i + 1
                 j = 0
             self.createButton(bookmark, i, j)
-            j = j + 1
+            j = j + 2
 
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
@@ -148,7 +148,42 @@ class MainWindow(QMainWindow):
         bookmarkButton = QPushButton(self.bookmarkWidget)
         bookmarkButton.setText(bookmark["title"])
         bookmarkButton.clicked.connect(lambda: self.navigate(bookmark["url"]))
+        bookCloseButton = PicButton(QPixmap("close.png"))
+        bookCloseButton.clicked.connect(lambda: self.removeBookMark(bookmark["url"]))
         self.layout.addWidget(bookmarkButton, i, j)
+        self.layout.addWidget(bookCloseButton, i, j+1)
+
+    def removeBookMark(self, qurl):
+        try:
+            with open("bookmarks.txt", "w") as f:
+                i = 0
+                for x in self.bookmarks:
+                    if(x["url"] != qurl):
+                        if(i < 1):
+                            f.write("{\"title\": \"" + x["title"] + "\", \"url\": \"" + x["url"] + "\"}")
+                            i = i + 1
+                        else:
+                            f.write("\n{\"title\": \"" + x["title"] + "\", \"url\": \"" + x["url"] + "\"}")
+                f.close()
+        except:
+            print("Error File System")
+        finally:
+            with open("bookmarks.txt") as f:
+                self.bookmarks = f.readlines()
+                self.bookmarks = [json.loads(x) for x in self.bookmarks]
+                f.close()
+            for i in reversed(range(self.layout.count())):
+                self.layout.itemAt(i).widget().setParent(None)
+            i = 0
+            j = 0
+            for bookmark in self.bookmarks:
+                if(j%5 == 0 and j != 0):
+                    i = i + 1
+                    j = 0
+                self.createButton(bookmark, i, j)
+                j = j + 2
+            self.bookmarkWidget.hide()
+            self.bookmarkWidget.show()
 
     def addBookmark(self):
         title = self.tabs.currentWidget().page().title()
@@ -183,7 +218,7 @@ class MainWindow(QMainWindow):
                         i = i + 1
                         j = 0
                     self.createButton(bookmark, i, j)
-                    j = j + 1
+                    j = j + 2
         else:
             try:
                 with open("bookmarks.txt", "w") as f:
@@ -212,7 +247,7 @@ class MainWindow(QMainWindow):
                         i = i + 1
                         j = 0
                     self.createButton(bookmark, i, j)
-                    j = j + 1
+                    j = j + 2
 
     def closeTab(self, i):
         self.tabs.removeTab(i)
