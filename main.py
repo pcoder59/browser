@@ -31,10 +31,16 @@ class MainWindow(QMainWindow):
 
         self.bookmarkWidget = QWidget()
         self.bookmarkWidget.setWindowTitle("Bookmarks")
-        self.layout = QHBoxLayout(self.bookmarkWidget)
+        self.layout = QGridLayout(self.bookmarkWidget)
 
+        i = 0
+        j = 0
         for bookmark in self.bookmarks:
-            self.createButton(bookmark)
+            if(j%5 == 0 and j != 0):
+                i = i + 1
+                j = 0
+            self.createButton(bookmark, i, j)
+            j = j + 1
 
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
@@ -138,11 +144,11 @@ class MainWindow(QMainWindow):
         currentTab = self.tabs.currentIndex()
         self.closeTab(currentTab)
 
-    def createButton(self, bookmark):
+    def createButton(self, bookmark, i, j):
         bookmarkButton = QPushButton(self.bookmarkWidget)
         bookmarkButton.setText(bookmark["title"])
         bookmarkButton.clicked.connect(lambda: self.navigate(bookmark["url"]))
-        self.layout.addWidget(bookmarkButton)
+        self.layout.addWidget(bookmarkButton, i, j)
 
     def addBookmark(self):
         title = self.tabs.currentWidget().page().title()
@@ -262,13 +268,13 @@ class MainWindow(QMainWindow):
             flag = False
             for domain in domains:
                 test = ("."+domain).lower()
+                if(url.startswith("http://") or url.startswith("https://")):
+                    self.tabs.currentWidget().setUrl(QUrl(url))
+                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                    flag = True
                 if(url.endswith(test) or url.endswith(test+'/')):
-                    if(url.startswith("http://") or url.startswith("https://")):
-                        self.tabs.currentWidget().setUrl(QUrl(url))
-                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
-                    else:
-                        self.tabs.currentWidget().setUrl(QUrl("http://"+url))
-                        self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
+                    self.tabs.currentWidget().setUrl(QUrl("http://"+url))
+                    self.tabs.currentWidget().loadFinished.connect(lambda: self.status.showMessage("Done"))
                     flag = True
             if flag == False:
                 self.tabs.currentWidget().setUrl(QUrl("https://duckduckgo.com/?q="+url))
